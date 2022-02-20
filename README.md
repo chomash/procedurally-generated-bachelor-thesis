@@ -1,2 +1,3 @@
 # procedurally-generated-thesis
- Procedurally Generated Dungeon
+ praca licencjacka - Tomasz Czuma
+ Stworzenie prototypu gry z wykorzystaniem proceduralnie generowanych poziomów
