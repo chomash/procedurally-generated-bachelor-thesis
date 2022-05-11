@@ -1,6 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DelaunatorSharp;
+using DelaunatorSharp.Unity.Extensions;
+using System.Linq;
+
 
 public class DungeonGenerator : MonoBehaviour
 {
@@ -15,11 +19,22 @@ public class DungeonGenerator : MonoBehaviour
 
 
 
+    private List<IPoint> points = new List<IPoint>();
+    private Delaunator delaunator;
+    private Transform PointsContainer;
+    private Transform TileContainer;
+    private Transform TrianglesContainer;
+    [SerializeField] Color triangleEdgeColor = Color.black;
+    [SerializeField] Material meshMaterial;
+    [SerializeField] Material lineMaterial;
+    [SerializeField] float triangleEdgeWidth = .01f;
+    [SerializeField] GameObject trianglePointPrefab;
+
+
     private room newRoom;
     private List<room> rooms;
     private int[,] grid;
     private GameObject spawnedTile;
-
     enum TileType
     {
         room,
@@ -27,6 +42,7 @@ public class DungeonGenerator : MonoBehaviour
         corridor
     }
     
+
     void Start()
     {
         if (randomizeSeed)
@@ -37,17 +53,12 @@ public class DungeonGenerator : MonoBehaviour
         grid = new int[dungeonSize.x, dungeonSize.y];
         rooms = new List<room>();
 
-
         GenerateRooms();
-        //Triangulate here
+        Delaunay();
         //Make Create Links
         //Create Paths
-        //
         DrawDungeon();
 
-
-        
-        //debug
         DebugListRooms();
     }
 
@@ -85,6 +96,18 @@ public class DungeonGenerator : MonoBehaviour
 
     }
 
+    private void Delaunay()
+    {
+        foreach (var i in rooms)
+        {
+            points.Add(new Point(i.info.center.x, i.info.center.y));
+        }
+        delaunator = new Delaunator(points.ToArray());
+        
+        CreateNewContainers();
+        Triangulate();
+    }
+
     private void DrawDungeon()
     {
         for (int x = 0; x < dungeonSize.x; x++)
@@ -103,13 +126,14 @@ public class DungeonGenerator : MonoBehaviour
                 {
                     spawnedTile = Instantiate(one);
                 }
-                
+
+                spawnedTile.transform.parent = TileContainer;
                 spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
             }
         }
     }
 
-
+    #region overlapping checks
     private bool RoomInGrid(room newRoom)
     {
         if (newRoom.info.min.x >= 0 &&
@@ -123,7 +147,6 @@ public class DungeonGenerator : MonoBehaviour
             return false;
         }
     }
-
     private bool RoomNotOverlapping(room newRoom)
     {
         bool isOverlap = true;
@@ -162,12 +185,81 @@ public class DungeonGenerator : MonoBehaviour
         }
         
     }
+    #endregion
+
+    #region triangulation
+    private void Triangulate()
+    {
+        if (delaunator == null) return;
+
+        delaunator.ForEachTriangleEdge(edge =>
+        {
+
+            CreateLine(TrianglesContainer, $"TriangleEdge - {edge.Index}", new Vector3[] { edge.P.ToVector3(), edge.Q.ToVector3() }, triangleEdgeColor, triangleEdgeWidth, 10);
+
+            var pointGameObject = Instantiate(trianglePointPrefab, PointsContainer);
+            pointGameObject.transform.SetPositionAndRotation(edge.P.ToVector3(), Quaternion.identity);
+
+        });
+    }
+    private void CreateLine(Transform container, string name, Vector3[] points, Color color, float width, int order)
+    {
+        var lineGameObject = new GameObject(name);
+        lineGameObject.transform.parent = container;
+        var lineRenderer = lineGameObject.AddComponent<LineRenderer>();
+
+        lineRenderer.SetPositions(points);
+
+        lineRenderer.material = lineMaterial ?? new Material(Shader.Find("Standard"));
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
+        lineRenderer.startWidth = width;
+        lineRenderer.endWidth = width;
+        lineRenderer.sortingOrder = order;
+    }
+    #endregion
+
+    #region containers
+    private void CreateNewContainers()
+    {
+        CreateNewPointsContainer();
+        CreateNewTrianglesContainer();
+        CreateNewTileContainer();
+    }
+    private void CreateNewPointsContainer()
+    {
+        if (PointsContainer != null)
+        {
+            Destroy(PointsContainer.gameObject);
+        }
+
+        PointsContainer = new GameObject(nameof(PointsContainer)).transform;
+    }
+    private void CreateNewTrianglesContainer()
+    {
+        if (TrianglesContainer != null)
+        {
+            Destroy(TrianglesContainer.gameObject);
+        }
+
+        TrianglesContainer = new GameObject(nameof(TrianglesContainer)).transform;
+    }
+    private void CreateNewTileContainer()
+    {
+        if (TileContainer != null)
+        {
+            Destroy(TileContainer.gameObject);
+        }
+
+        TileContainer = new GameObject(nameof(TileContainer)).transform;
+    }
+    #endregion
 
 
     private void DebugListRooms()
     {
-       int i = 0;
-        foreach(var room in rooms)
+        int i = 0;
+        foreach (var room in rooms)
         {
             i++;
             Debug.Log($"{i}. min:{room.info.min} || max:{room.info.max}");
