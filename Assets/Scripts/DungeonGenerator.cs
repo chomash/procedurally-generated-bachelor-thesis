@@ -13,7 +13,9 @@ public class DungeonGenerator : MonoBehaviour
     [SerializeField]
     bool randomizeSeed;
     [SerializeField]
-    private int seed, roomCount, gapSize, attempts;
+    public int seed;
+    [SerializeField]
+    private int roomCount, gapSize, attempts;
     [SerializeField]
     private GameObject zero, one, two;
 
@@ -21,6 +23,8 @@ public class DungeonGenerator : MonoBehaviour
 
     private List<IPoint> points = new List<IPoint>();
     private Delaunator delaunator;
+    private IEnumerable<IEdge> edges;
+
     private Transform PointsContainer;
     private Transform TileContainer;
     private Transform TrianglesContainer;
@@ -29,12 +33,12 @@ public class DungeonGenerator : MonoBehaviour
     [SerializeField] Material lineMaterial;
     [SerializeField] float triangleEdgeWidth = .01f;
     [SerializeField] GameObject trianglePointPrefab;
-
-
-    private room newRoom;
+ 
     private List<room> rooms;
+    private room newRoom;
     private int[,] grid;
     private GameObject spawnedTile;
+
     enum TileType
     {
         room,
@@ -49,17 +53,22 @@ public class DungeonGenerator : MonoBehaviour
         {
             seed = (int)System.DateTime.Now.Ticks; 
         }
-        Random.seed = seed;
+        Random.InitState(seed);
+
         grid = new int[dungeonSize.x, dungeonSize.y];
         rooms = new List<room>();
 
         GenerateRooms();
         Delaunay();
-        //Make Create Links
-        //Create Paths
-        DrawDungeon();
+        ConnectRooms();
 
-        DebugListRooms();
+
+
+
+        CreateNewContainers();
+        DrawDungeon();
+        DrawTriangles();
+        //DebugListRooms();
     }
 
     private void GenerateRooms() 
@@ -67,7 +76,6 @@ public class DungeonGenerator : MonoBehaviour
         int j = 0; //room placement attempt counter
         for (int i = 0; i < roomCount; i++)
         {
-
             //randomize coords, size
             Vector2Int newCoords = new Vector2Int(Random.Range(0, dungeonSize.x), Random.Range(0, dungeonSize.y));
             Vector2Int newSize = new Vector2Int(Random.Range(minRoomSize.x, maxRoomSize.x), Random.Range(minRoomSize.y, maxRoomSize.y));
@@ -93,9 +101,7 @@ public class DungeonGenerator : MonoBehaviour
                 
             }           
         }
-
     }
-
     private void Delaunay()
     {
         foreach (var i in rooms)
@@ -103,11 +109,70 @@ public class DungeonGenerator : MonoBehaviour
             points.Add(new Point(i.info.center.x, i.info.center.y));
         }
         delaunator = new Delaunator(points.ToArray());
-        
-        CreateNewContainers();
-        Triangulate();
+        edges = delaunator.GetEdges();
     }
 
+
+
+    private void ConnectRooms()
+    {
+        Prim prim = new Prim(edges, points);
+        prim.MinimumSpanningTree();
+    }
+    #region check overlapping
+    private bool RoomInGrid(room newRoom)
+    {
+        if (newRoom.info.min.x >= 0 &&
+            newRoom.info.min.y >= 0 &&
+            newRoom.info.max.x <= dungeonSize.x - 1 &&
+            newRoom.info.max.y <= dungeonSize.y - 1)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    private bool RoomNotOverlapping(room newRoom)
+    {
+        bool isOverlap = true;
+        //additional +1 because of how overlap function works.
+        room newRoomWithBorders = new room(newRoom.info.min + new Vector2Int(-(gapSize + 1), -(gapSize + 1)), newRoom.info.size + new Vector2Int(2 * (gapSize + 1), 2 * (gapSize + 1)));
+
+        if (rooms.Count > 0)
+        {
+            foreach (var room in rooms)
+            {
+                if (newRoomWithBorders.info.Overlaps(room.info))
+                {
+                    isOverlap = true;
+                    break;
+                }
+                else
+                {
+                    isOverlap = false;
+                }
+            }
+        }
+        else
+        {
+            isOverlap = false;
+        }
+
+
+
+        if (isOverlap)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+
+    }
+    #endregion
     private void DrawDungeon()
     {
         for (int x = 0; x < dungeonSize.x; x++)
@@ -133,72 +198,16 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
-    #region overlapping checks
-    private bool RoomInGrid(room newRoom)
-    {
-        if (newRoom.info.min.x >= 0 &&
-            newRoom.info.min.y >= 0 &&
-            newRoom.info.max.x <= dungeonSize.x-1 &&
-            newRoom.info.max.y <= dungeonSize.y-1)
-        {
-            return true;
-        }else
-        {
-            return false;
-        }
-    }
-    private bool RoomNotOverlapping(room newRoom)
-    {
-        bool isOverlap = true;
-        //additional +1 because of how overlap function works.
-        room newRoomWithBorders = new room (newRoom.info.min + new Vector2Int(-(gapSize+1),-(gapSize+1)), newRoom.info.size + new Vector2Int(2*(gapSize+1),2*(gapSize+1)));
-
-        if(rooms.Count > 0)
-        {
-            foreach (var room in rooms)
-	        {
-                if (newRoomWithBorders.info.Overlaps(room.info))
-                {
-                    isOverlap = true;
-                    break;
-                }               
-                else
-                {
-                    isOverlap = false;
-                }
-	        }
-        }
-        else
-        {
-            isOverlap=false;
-        }
-        
-
-
-        if (isOverlap)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-        
-    }
-    #endregion
-
-    #region triangulation
-    private void Triangulate()
+    private void DrawTriangles()
     {
         if (delaunator == null) return;
-
         delaunator.ForEachTriangleEdge(edge =>
         {
-
             CreateLine(TrianglesContainer, $"TriangleEdge - {edge.Index}", new Vector3[] { edge.P.ToVector3(), edge.Q.ToVector3() }, triangleEdgeColor, triangleEdgeWidth, 10);
-
-            var pointGameObject = Instantiate(trianglePointPrefab, PointsContainer);
-            pointGameObject.transform.SetPositionAndRotation(edge.P.ToVector3(), Quaternion.identity);
+            
+            //draw poins
+            //var pointGameObject = Instantiate(trianglePointPrefab, PointsContainer);
+            //pointGameObject.transform.SetPositionAndRotation(edge.P.ToVector3(), Quaternion.identity);
 
         });
     }
@@ -217,8 +226,7 @@ public class DungeonGenerator : MonoBehaviour
         lineRenderer.endWidth = width;
         lineRenderer.sortingOrder = order;
     }
-    #endregion
-
+    
     #region containers
     private void CreateNewContainers()
     {
@@ -258,11 +266,19 @@ public class DungeonGenerator : MonoBehaviour
 
     private void DebugListRooms()
     {
+
         int i = 0;
         foreach (var room in rooms)
         {
             i++;
             Debug.Log($"{i}. min:{room.info.min} || max:{room.info.max}");
         }
+
+
+        foreach (var edge in edges)
+        {
+            Debug.Log(edge.Index + ". " +edge.P + "/" + edge.Q);
+        }
+        
     }
 }

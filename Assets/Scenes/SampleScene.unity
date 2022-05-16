@@ -552,13 +552,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonSize: {x: 100, y: 100}
-  minRoomSize: {x: 10, y: 10}
-  maxRoomSize: {x: 30, y: 30}
+  minRoomSize: {x: 5, y: 5}
+  maxRoomSize: {x: 10, y: 10}
   randomizeSeed: 1
   seed: 42069
-  roomCount: 15
-  gapSize: 5
-  attempts: 30
+  roomCount: 10
+  gapSize: 2
+  attempts: 10
   zero: {fileID: 4168312628687864312, guid: 2464785e6bc3c274ca56b8f60cfaf2b3, type: 3}
   one: {fileID: 4168312628687864312, guid: 982f231d531719046afcdca41bc840fd, type: 3}
   two: {fileID: 4168312628687864312, guid: 9a4366246c7c48b4088b9ad001c8aa3a, type: 3}
