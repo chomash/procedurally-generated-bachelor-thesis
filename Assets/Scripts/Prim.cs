@@ -1,64 +1,75 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using DelaunatorSharp.Unity.Extensions;
 using DelaunatorSharp;
+using DelaunatorSharp.Unity.Extensions;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 public class Prim
 {
     private List<IEdge> allEdges;
-    private List<PVertex> vertexes;
-    private List<PVertex> dumpVertexes;
+    private List<PVertex> allVertexes;
+    private List<PVertex> avaliableVertexes;
 
     private List<PVertex> adjacentVertexes;
-    private List<Edge> newEdges = null;
-    private List<Edge> spareEdges;
+    private List<Edge> newEdges = new List<Edge>();
+    private List<Edge> unusedEdges = new List<Edge>();
 
     public Prim(IEnumerable<IEdge> inEdges, List<IPoint> inVertexes)
     {
         allEdges = inEdges.ToList();
-        vertexes = new List<PVertex>();
+        allVertexes = new List<PVertex>();
         foreach (var item in inVertexes)
         {
-            vertexes.Add(new PVertex(item.ToVector3()));
+            allVertexes.Add(new PVertex(item.ToVector3()));
         }
     }
 
-
-
-    public List<Edge> MinimumSpanningTree()
+    public List<Edge> MinimumSpanningTree(float additionalEdges)
     {
-        vertexes[Random.Range(0, vertexes.Count)].key = 0f;
-        dumpVertexes = new List<PVertex>(vertexes);
-        
-        while (dumpVertexes.Count > 0)
+        allVertexes[Random.Range(0, allVertexes.Count)].key = 0f;
+        avaliableVertexes = new List<PVertex>(allVertexes);
+        while (avaliableVertexes.Count > 0)
         {
-            int u = MinValueIndex(dumpVertexes);
-            PVertex temp = dumpVertexes[u];
-            dumpVertexes.Remove(dumpVertexes[u]);
+            int minValueI = MinValueIndex(avaliableVertexes);
+            PVertex tempVertex = avaliableVertexes[minValueI];
+            avaliableVertexes.Remove(avaliableVertexes[minValueI]);
 
-            if (temp.parentIndex >= 0)
+            if (tempVertex.parentIndex >= 0)
             {
-                Edge tempEdge = new Edge(newEdges.Count - 1, temp.position, vertexes[temp.parentIndex].position);
+
+                Point x = new Point(tempVertex.position.x, tempVertex.position.y);
+                Point y = new Point(allVertexes[tempVertex.parentIndex].position.x, allVertexes[tempVertex.parentIndex].position.y);
+                int i = newEdges.Count;
+                Edge tempEdge = new Edge(i, x, y);
                 newEdges.Add(tempEdge);
+
             }
 
-            foreach (var adjVert in Adjacent(temp))
+            foreach (var adjVertex in Adjacent(tempVertex))
             {
-                float distance = Vector3.Distance(adjVert.position, temp.position);
-                int dumpIndex = GetIndex(dumpVertexes, adjVert);
-                if (dumpIndex>=0 && distance < adjVert.key)
+                float distance = Vector3.Distance(adjVertex.position, tempVertex.position);
+                int avaVerIndex = GetIndex(avaliableVertexes, adjVertex);
+                if (avaVerIndex >= 0 && distance < avaliableVertexes[avaVerIndex].key)
                 {
-                    dumpVertexes[dumpIndex].key = distance;
-                    dumpVertexes[dumpIndex].parentIndex = GetIndex(vertexes, temp);
+                    avaliableVertexes[avaVerIndex].key = distance;
+                    avaliableVertexes[avaVerIndex].parentIndex = GetIndex(allVertexes, tempVertex);
                 }
             }
-            
-        }
-        
 
+        }
+
+
+        if (additionalEdges > 0)
+        {
+            unusedEdges = new List<Edge>(Difference());
+            int no_Add = Mathf.RoundToInt(additionalEdges * unusedEdges.Count());
+            for (int i = 0; i < no_Add; i++)
+            {
+                newEdges.Add(unusedEdges[0]);
+                unusedEdges.Remove(unusedEdges[0]);
+            }
+        }
         return newEdges;
     }
 
@@ -77,9 +88,7 @@ public class Prim
                 Index = i;
             }
         }
-
         return Index;
-
     }
 
     private List<PVertex> Adjacent(PVertex testVertex)
@@ -92,29 +101,28 @@ public class Prim
         {
             adjacentVertexes.Clear();
         }
-        
+
         for (int i = 0; i < allEdges.Count; i++)
         {
             if (allEdges[i].P.ToVector3() == testVertex.position)
             {
                 adjacentVertexes.Add(new PVertex(allEdges[i].Q.ToVector3()));
             }
-            else if( allEdges[i].Q.ToVector3() == testVertex.position)
+            else if (allEdges[i].Q.ToVector3() == testVertex.position)
             {
                 adjacentVertexes.Add(new PVertex(allEdges[i].P.ToVector3()));
             }
         }
         return adjacentVertexes;
     }
-   
     private int GetIndex(List<PVertex> list, PVertex vertex)
     {
         int index = 0;
         foreach (PVertex p in list)
         {
-            if(p.position == vertex.position &&
+            if (p.position == vertex.position/* &&
                 p.parentIndex == vertex.parentIndex &&
-                p.key == vertex.key)
+                p.key == vertex.key*/)
             {
                 return index;
             }
@@ -123,16 +131,59 @@ public class Prim
         return -1;
 
     }
+    public List<Edge> Difference()
+    {
+        List<unusedEdge> unsorted = new List<unusedEdge>();
+        List<Edge> list = new List<Edge>();
+        int n = 0;
+        bool canAdd = false;
+        for (int i = 0; i < allEdges.Count; i++)
+        {
+            for (int j = 0; j < newEdges.Count; j++)
+            {
+                
+                if (allEdges[i].P.ToVector3() == newEdges[j].P.ToVector3() &&
+                    allEdges[i].Q.ToVector3() == newEdges[j].Q.ToVector3() ||
+                    allEdges[i].P.ToVector3() == newEdges[j].Q.ToVector3() &&
+                    allEdges[i].Q.ToVector3() == newEdges[j].P.ToVector3() )
+                {
+                    canAdd = false;
+                    break;
+                }
+                canAdd = true;
+            }
+            if (canAdd)
+            {
+                unsorted.Add(new unusedEdge(new Edge(n, allEdges[i].P, allEdges[i].Q)));
+                n++;
+            }
 
+        }
 
-    //private float Distance(PVertex a, PVertex b)
-    //{
-    //    float dist = Vector3.Distance(a.position, b.position);
-    //    return dist;
-    //}
+        var sorted = unsorted.OrderBy(d => d.distance);
+        foreach(var sortedEdge in sorted)
+        {
+            list.Add(sortedEdge.edge);
+        }
+          
+
+        return list;
+    }
+
 }
 
+public class unusedEdge
+{
+    public Edge edge;
+    public float distance;
+    public int index;
+    public unusedEdge(Edge edge)
+    {
+        this.edge = edge;
+        distance = Vector3.Distance(edge.P.ToVector3(), edge.Q.ToVector3());
+    }
 
+}
 
 public class PVertex
 {

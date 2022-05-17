@@ -8,6 +8,7 @@ using System.Linq;
 
 public class DungeonGenerator : MonoBehaviour
 {
+    #region data
     [SerializeField]
     private Vector2Int dungeonSize, minRoomSize, maxRoomSize;
     [SerializeField]
@@ -18,20 +19,23 @@ public class DungeonGenerator : MonoBehaviour
     private int roomCount, gapSize, attempts;
     [SerializeField]
     private GameObject zero, one, two;
+    [SerializeField] float FractionOfRestEdgesAdded = 0;
 
 
 
     private List<IPoint> points = new List<IPoint>();
     private Delaunator delaunator;
     private IEnumerable<IEdge> edges;
+    private List<Edge> PrimEdges = new List<Edge>();
 
     private Transform PointsContainer;
     private Transform TileContainer;
+    private Transform PrimContainer;
     private Transform TrianglesContainer;
-    [SerializeField] Color triangleEdgeColor = Color.black;
+    [SerializeField] Color triangleEdgeColor, primColor = Color.black;
     [SerializeField] Material meshMaterial;
     [SerializeField] Material lineMaterial;
-    [SerializeField] float triangleEdgeWidth = .01f;
+    [SerializeField] float triangleEdgeWidth, primEdgeWidth = .01f;
     [SerializeField] GameObject trianglePointPrefab;
  
     private List<room> rooms;
@@ -45,7 +49,7 @@ public class DungeonGenerator : MonoBehaviour
         border,
         corridor
     }
-    
+    #endregion
 
     void Start()
     {
@@ -68,6 +72,7 @@ public class DungeonGenerator : MonoBehaviour
         CreateNewContainers();
         DrawDungeon();
         DrawTriangles();
+        DrawPrims();
         //DebugListRooms();
     }
 
@@ -79,7 +84,7 @@ public class DungeonGenerator : MonoBehaviour
             //randomize coords, size
             Vector2Int newCoords = new Vector2Int(Random.Range(0, dungeonSize.x), Random.Range(0, dungeonSize.y));
             Vector2Int newSize = new Vector2Int(Random.Range(minRoomSize.x, maxRoomSize.x), Random.Range(minRoomSize.y, maxRoomSize.y));
-            newRoom = new room(newCoords, newSize);
+            newRoom = new room(newCoords, newSize-Vector2Int.one);
 
             if(RoomInGrid(newRoom) && RoomNotOverlapping(newRoom))
             {
@@ -117,7 +122,9 @@ public class DungeonGenerator : MonoBehaviour
     private void ConnectRooms()
     {
         Prim prim = new Prim(edges, points);
-        prim.MinimumSpanningTree();
+        PrimEdges = prim.MinimumSpanningTree(FractionOfRestEdgesAdded);
+        
+
     }
     #region check overlapping
     private bool RoomInGrid(room newRoom)
@@ -198,6 +205,14 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    private void DrawPrims()
+    {
+        if (PrimEdges == null) return;
+        PrimEdges.ForEach(edge =>
+        {
+            CreateLine(PrimContainer, $"TriangleEdge - {edge.Index}", new Vector3[] { edge.P.ToVector3(), edge.Q.ToVector3() }, primColor, primEdgeWidth, 11);
+        });
+    }
     private void DrawTriangles()
     {
         if (delaunator == null) return;
@@ -232,6 +247,7 @@ public class DungeonGenerator : MonoBehaviour
     {
         CreateNewPointsContainer();
         CreateNewTrianglesContainer();
+        CreateNewPrimContainer();
         CreateNewTileContainer();
     }
     private void CreateNewPointsContainer()
@@ -251,6 +267,15 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         TrianglesContainer = new GameObject(nameof(TrianglesContainer)).transform;
+    }
+    private void CreateNewPrimContainer()
+    {
+        if (PrimContainer != null)
+        {
+            Destroy(PrimContainer.gameObject);
+        }
+
+        PrimContainer = new GameObject(nameof(PrimContainer)).transform;
     }
     private void CreateNewTileContainer()
     {
