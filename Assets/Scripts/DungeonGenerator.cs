@@ -6,49 +6,105 @@ using DelaunatorSharp.Unity.Extensions;
 using System.Linq;
 
 
+public class GridLocation
+{
+    public int x;
+    public int y;
+    public byte type; //0 - empty, 1 - room, 2 - border, 3 - corridor
+    public room parentRoom;
+
+    public GridLocation()
+    {
+        type = 0;
+    }
+    public GridLocation(int _x, int _y)
+    {
+        x = _x;
+        y = _y;
+    }
+    public GridLocation(int _x, int _y, byte _type)
+    {
+        x = _x;
+        y = _y;
+        type = _type;
+    }
+    public GridLocation(int _x, int _y, byte _type, room parent)
+    {
+        x = _x;
+        y = _y;
+        type = _type;
+        parentRoom = parent;
+    }
+
+    public Vector2 ToVector()
+    {
+        return new Vector2(x, y);
+    }
+
+    public static GridLocation operator +(GridLocation a, GridLocation b) => new GridLocation(a.x + b.x, a.y + b.y);
+
+    public override bool Equals(object obj)
+    {
+        if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+        {
+            return false;
+        }
+        else
+        {
+            return x == ((GridLocation)obj).x && y == ((GridLocation)obj).y;
+        }
+    }
+
+    public override int GetHashCode()
+    {
+        return 0;
+    }
+}
+
 public class DungeonGenerator : MonoBehaviour
 {
     #region data
-    [SerializeField]
-    private Vector2Int dungeonSize, minRoomSize, maxRoomSize;
-    [SerializeField]
-    bool randomizeSeed;
-    [SerializeField]
+    [SerializeField] public Pathfinding_AStar AStar;
+    [Header("Generation properties")]
+    public Vector2Int dungeonSize;
+    public Vector2Int minRoomSize, maxRoomSize;
+    public int roomCount, gapSize, attempts;
+    public float FractionOfCorridorsAdded = 0;
+    public bool randomizeSeed;
     public int seed;
-    [SerializeField]
-    private int roomCount, gapSize, attempts;
-    [SerializeField]
-    private GameObject zero, one, two;
-    [SerializeField] float FractionOfRestEdgesAdded = 0;
 
+    [Header("Tile Properties")]
+    public GameObject empty;
+    public GameObject room, border, corridor;
 
+    [Header("Triangulation Properties")]
+    public bool showTriangleEdges = true;
+    public bool showPrimEdges = true;
+    public Color triangleEdgeColor = new Color(50, 100, 200, 120);
+    public Color primColor = Color.black;
+    public Material meshMaterial;
+    public Material lineMaterial;
+    public float triangleEdgeWidth = 0.1f;
+    public float primEdgeWidth = 0.08f;
+    public GameObject trianglePointPrefab;
 
     private List<IPoint> points = new List<IPoint>();
     private Delaunator delaunator;
     private IEnumerable<IEdge> edges;
     private List<Edge> PrimEdges = new List<Edge>();
-
     private Transform PointsContainer;
     private Transform TileContainer;
     private Transform PrimContainer;
     private Transform TrianglesContainer;
-    [SerializeField] Color triangleEdgeColor, primColor = Color.black;
-    [SerializeField] Material meshMaterial;
-    [SerializeField] Material lineMaterial;
-    [SerializeField] float triangleEdgeWidth, primEdgeWidth = .01f;
-    [SerializeField] GameObject trianglePointPrefab;
- 
     private List<room> rooms;
     private room newRoom;
-    private int[,] grid;
+    public GridLocation[,] gridMap;
+    public List<GridLocation> directions = new List<GridLocation>() { new GridLocation(1,0),
+                                                                      new GridLocation(-1,0),
+                                                                      new GridLocation(0,1),
+                                                                      new GridLocation (0,-1)};
+    
     private GameObject spawnedTile;
-
-    enum TileType
-    {
-        room,
-        border,
-        corridor
-    }
     #endregion
 
     void Start()
@@ -58,26 +114,32 @@ public class DungeonGenerator : MonoBehaviour
             seed = (int)System.DateTime.Now.Ticks; 
         }
         Random.InitState(seed);
-
-        grid = new int[dungeonSize.x, dungeonSize.y];
+        
+        gridMap = new GridLocation[dungeonSize.x, dungeonSize.y];
         rooms = new List<room>();
 
         GenerateRooms();
         Delaunay();
         ConnectRooms();
-
-
-
+        Pathfinding();
 
         CreateNewContainers();
         DrawDungeon();
-        DrawTriangles();
-        DrawPrims();
-        //DebugListRooms();
+
+        if (showTriangleEdges)
+        {
+            DrawTriangles();
+        }
+        if (showPrimEdges)
+        {
+
+            DrawPrims();
+        }
     }
 
     private void GenerateRooms() 
     {
+        InitialGrid();
         int j = 0; //room placement attempt counter
         for (int i = 0; i < roomCount; i++)
         {
@@ -92,7 +154,8 @@ public class DungeonGenerator : MonoBehaviour
                 {
                     for (int y = newRoom.info.y; y <= newRoom.info.yMax; y++)
                     {
-                        grid[x, y] = 1;
+                        //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
+                        gridMap[x, y] = new GridLocation(x, y, 1, newRoom);
                     }
                 }
                 rooms.Add(newRoom);
@@ -116,16 +179,65 @@ public class DungeonGenerator : MonoBehaviour
         delaunator = new Delaunator(points.ToArray());
         edges = delaunator.GetEdges();
     }
-
-
-
+    private void InitialGrid()
+    {
+        for (int x = 0; x < dungeonSize.x; x++)
+        {
+            for (int y = 0; y < dungeonSize.y; y++)
+            {
+                gridMap[x, y] = new GridLocation(x,y,0);
+            }
+        }
+    }
     private void ConnectRooms()
     {
         Prim prim = new Prim(edges, points);
-        PrimEdges = prim.MinimumSpanningTree(FractionOfRestEdgesAdded);
+        PrimEdges = prim.MinimumSpanningTree(FractionOfCorridorsAdded);
         
 
     }
+    private void Pathfinding()
+    {
+        foreach (Edge e in PrimEdges)
+        {
+            Vector2Int eP = Vector2Int.CeilToInt(new Vector2((float)e.P.X, (float)e.P.Y));
+            Vector2Int eQ = Vector2Int.CeilToInt(new Vector2((float)e.Q.X, (float)e.Q.Y));
+            bool foundP = false;
+            bool foundQ = false;
+            Vector2Int sLoc = Vector2Int.zero;
+            Vector2Int eLoc = Vector2Int.zero;
+
+            for (int x = 0; x < dungeonSize.x; x++)
+            {
+                if (foundP && foundQ)
+                {
+                    break;
+                }
+                for (int y = 0; y < dungeonSize.y; y++)
+                {
+                    if (gridMap[x, y].parentRoom == null) { continue; }
+
+                    RectInt imHere = new RectInt(gridMap[x, y].parentRoom.info.min, gridMap[x, y].parentRoom.info.size + Vector2Int.one);
+                    if (imHere.Contains(eP) && !foundP)
+                    {
+                        sLoc = Vector2Int.CeilToInt(gridMap[x, y].parentRoom.info.center);
+                        foundP = true;
+                    }
+                    if (imHere.Contains(eQ) && !foundQ)
+                    {
+                        eLoc = Vector2Int.CeilToInt(gridMap[x, y].parentRoom.info.center);
+                        foundQ = true;
+                    }
+                }
+            }
+
+            if(foundP && foundQ)
+            {
+                AStar.SearchForConnection(gridMap[sLoc.x, sLoc.y], gridMap[eLoc.x, eLoc.y]);
+            }            
+        }
+    }
+
     #region check overlapping
     private bool RoomInGrid(room newRoom)
     {
@@ -145,7 +257,7 @@ public class DungeonGenerator : MonoBehaviour
     {
         bool isOverlap = true;
         //additional +1 because of how overlap function works.
-        room newRoomWithBorders = new room(newRoom.info.min + new Vector2Int(-(gapSize + 1), -(gapSize + 1)), newRoom.info.size + new Vector2Int(2 * (gapSize + 1), 2 * (gapSize + 1)));
+        room newRoomWithBorders = new room(newRoom.info.min + new Vector2Int(-(gapSize+1), -(gapSize + 1)), newRoom.info.size + new Vector2Int(2 * (gapSize + 1), 2 * (gapSize + 1)));
 
         if (rooms.Count > 0)
         {
@@ -175,6 +287,16 @@ public class DungeonGenerator : MonoBehaviour
         }
         else
         {
+            //shrinking by 1, to negate previous changes
+            for (int x = newRoomWithBorders.info.x+1; x <= newRoomWithBorders.info.xMax-1; x++)
+            {
+                for (int y = newRoomWithBorders.info.y+1; y <= newRoomWithBorders.info.yMax-1; y++)
+                {
+                    if(x < 0 || x > dungeonSize.x -1 || y < 0 || y > dungeonSize.y - 1) { continue; }
+                    //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
+                    gridMap[x, y] = new GridLocation(x, y, 2, null);
+                }
+            }
             return true;
         }
 
@@ -186,25 +308,40 @@ public class DungeonGenerator : MonoBehaviour
         {
             for (int y = 0; y < dungeonSize.y; y++)
             {
-                if(grid[x,y]== 0)
+                //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
+                if (gridMap[x,y].type == 0)
                 {
-                    spawnedTile = Instantiate(zero);
+                    //spawnedTile = Instantiate(empty);
+                    //spawnedTile.transform.parent = TileContainer;
+                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
-                else if (grid[x,y]== 2)
+                else if (gridMap[x, y].type == 1)
                 {
-                    spawnedTile = Instantiate(two);
+                    spawnedTile = Instantiate(room);
+                    spawnedTile.transform.parent = TileContainer;
+                    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
-                else
+                else if (gridMap[x, y].type == 2)
                 {
-                    spawnedTile = Instantiate(one);
+                    //spawnedTile = Instantiate(border);
+                    //spawnedTile.transform.parent = TileContainer;
+                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
+                else if(gridMap[x, y].type == 3)
+                {
+                    spawnedTile = Instantiate(corridor);
+                    spawnedTile.transform.parent = TileContainer;
+                    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
+                }
+                //if(spawnedTile != null)
+                //{
+                //    spawnedTile.transform.parent = TileContainer;
+                //    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
+                //}
 
-                spawnedTile.transform.parent = TileContainer;
-                spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
             }
         }
     }
-
     private void DrawPrims()
     {
         if (PrimEdges == null) return;
@@ -287,23 +424,4 @@ public class DungeonGenerator : MonoBehaviour
         TileContainer = new GameObject(nameof(TileContainer)).transform;
     }
     #endregion
-
-
-    private void DebugListRooms()
-    {
-
-        int i = 0;
-        foreach (var room in rooms)
-        {
-            i++;
-            Debug.Log($"{i}. min:{room.info.min} || max:{room.info.max}");
-        }
-
-
-        foreach (var edge in edges)
-        {
-            Debug.Log(edge.Index + ". " +edge.P + "/" + edge.Q);
-        }
-        
-    }
 }

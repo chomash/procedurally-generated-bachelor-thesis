@@ -158,10 +158,10 @@ RectTransform:
   m_Father: {fileID: 1050974542}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 700, y: -385}
-  m_SizeDelta: {x: 74.4383, y: 26.1108}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: -50, y: 50}
+  m_SizeDelta: {x: 75, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &71942708
 MonoBehaviour:
@@ -532,6 +532,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1603026987}
   - component: {fileID: 1603026986}
+  - component: {fileID: 1603026988}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -551,18 +552,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee7baf92920b074fa6214ddfbade444, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AStar: {fileID: 1603026988}
   dungeonSize: {x: 160, y: 90}
-  minRoomSize: {x: 5, y: 5}
-  maxRoomSize: {x: 10, y: 10}
-  randomizeSeed: 1
-  seed: -52815075
-  roomCount: 20
+  minRoomSize: {x: 6, y: 6}
+  maxRoomSize: {x: 12, y: 12}
+  roomCount: 35
   gapSize: 2
-  attempts: 10
-  zero: {fileID: 4168312628687864312, guid: 2464785e6bc3c274ca56b8f60cfaf2b3, type: 3}
-  one: {fileID: 4168312628687864312, guid: 982f231d531719046afcdca41bc840fd, type: 3}
-  two: {fileID: 4168312628687864312, guid: 9a4366246c7c48b4088b9ad001c8aa3a, type: 3}
-  FractionOfRestEdgesAdded: 0.1
+  attempts: 15
+  FractionOfCorridorsAdded: 0.08
+  randomizeSeed: 1
+  seed: 1857033580
+  empty: {fileID: 4168312628687864312, guid: 2464785e6bc3c274ca56b8f60cfaf2b3, type: 3}
+  room: {fileID: 4168312628687864312, guid: 982f231d531719046afcdca41bc840fd, type: 3}
+  border: {fileID: 4168312628687864312, guid: 9a4366246c7c48b4088b9ad001c8aa3a, type: 3}
+  corridor: {fileID: 4168312628687864312, guid: 82a034a09bdcc234bb7bcd0802f52bf9, type: 3}
+  showTriangleEdges: 0
+  showPrimEdges: 1
   triangleEdgeColor: {r: 0.36320752, g: 0.6508769, b: 1, a: 0.49019608}
   primColor: {r: 1, g: 0.32661325, b: 0, a: 1}
   meshMaterial: {fileID: 2100000, guid: 24e8abe2d8226cf439ec52aa21316043, type: 2}
@@ -585,6 +590,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1603026988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1603026985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb9b64a85333c624abe5087f6ce721eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dungGenerator: {fileID: 1603026986}
+  empty: 1
+  rightRoom: -1
+  wrongRoom: 2
+  corridor: 0
+  border: 3
+  distanceMulti: 1
 --- !u!1 &2073450482
 GameObject:
   m_ObjectHideFlags: 0
