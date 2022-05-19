@@ -17,6 +17,8 @@ public class Prim
     private List<Edge> newEdges = new List<Edge>();
     private List<Edge> unusedEdges = new List<Edge>();
 
+    private bool shortestEdges;
+
     public Prim(IEnumerable<IEdge> inEdges, List<IPoint> inVertexes)
     {
         allEdges = inEdges.ToList();
@@ -27,9 +29,10 @@ public class Prim
         }
     }
 
-    public List<Edge> MinimumSpanningTree(float additionalEdges)
+    public List<Edge> MinimumSpanningTree(float additionalEdges, bool shortestEdges)
     {
-        allVertexes[Random.Range(0, allVertexes.Count)].key = 0f;
+        this.shortestEdges = shortestEdges;
+        allVertexes[Random.Range(0, allVertexes.Count)].key = 0f;//randomize starting point
         avaliableVertexes = new List<PVertex>(allVertexes);
         while (avaliableVertexes.Count > 0)
         {
@@ -162,11 +165,22 @@ public class Prim
 
         }
 
-        var sorted = unsorted.OrderBy(d => d.distance);
-        foreach(var sortedEdge in sorted)
+        if (shortestEdges)
         {
-            list.Add(sortedEdge.edge);
+            var sorted = unsorted.OrderBy(d => d.distance);
+            foreach (var sortedEdge in sorted)
+            {
+                list.Add(sortedEdge.edge);
+            }
         }
+        else
+        {
+            foreach (var unsortedEdge in unsorted)
+            {
+                list.Add(unsortedEdge.edge);
+            }
+        }
+
           
 
         return list;

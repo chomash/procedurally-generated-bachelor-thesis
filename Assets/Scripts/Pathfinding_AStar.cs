@@ -112,8 +112,23 @@ public class Pathfinding_AStar : MonoBehaviour
             //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
             if (dungGenerator.gridMap[beginNode.location.x, beginNode.location.y].type != 1)
             {
+                //adding additional tiles below and to the left to make corridors at least 2 wide
                 dungGenerator.gridMap[beginNode.location.x, beginNode.location.y] = new GridLocation(beginNode.location.x, beginNode.location.y, 3, null);
             }
+            if (dungGenerator.gridMap[beginNode.location.x-1, beginNode.location.y].type != 1)
+            {
+                dungGenerator.gridMap[beginNode.location.x - 1, beginNode.location.y] = new GridLocation(beginNode.location.x - 1, beginNode.location.y, 3, null);
+            }
+            if(dungGenerator.gridMap[beginNode.location.x, beginNode.location.y-1].type != 1)
+            {
+                dungGenerator.gridMap[beginNode.location.x, beginNode.location.y - 1] = new GridLocation(beginNode.location.x, beginNode.location.y - 1, 3, null);
+            }
+            if(dungGenerator.gridMap[beginNode.location.x-1, beginNode.location.y - 1].type != 1)
+            { 
+                dungGenerator.gridMap[beginNode.location.x-1, beginNode.location.y-1] = new GridLocation(beginNode.location.x-1, beginNode.location.y-1, 3, null);
+            }
+
+
             beginNode = beginNode.parent;
         }
     }

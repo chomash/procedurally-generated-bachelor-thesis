@@ -4,6 +4,7 @@ using UnityEngine;
 using DelaunatorSharp;
 using DelaunatorSharp.Unity.Extensions;
 using System.Linq;
+using UnityEngine.Tilemaps;
 
 
 public class GridLocation
@@ -65,11 +66,14 @@ public class DungeonGenerator : MonoBehaviour
 {
     #region data
     [SerializeField] public Pathfinding_AStar AStar;
+    [SerializeField] public Tilemap floorTM, wallTM, decosTM;
+    [SerializeField] public RuleTile floor, walls, decos;
     [Header("Generation properties")]
     public Vector2Int dungeonSize;
     public Vector2Int minRoomSize, maxRoomSize;
     public int roomCount, gapSize, attempts;
-    public float FractionOfCorridorsAdded = 0;
+    public bool shorestSpareEdges = false;
+    public float percentOfSpareEdgesAdded = 0;
     public bool randomizeSeed;
     public int seed;
 
@@ -192,7 +196,7 @@ public class DungeonGenerator : MonoBehaviour
     private void ConnectRooms()
     {
         Prim prim = new Prim(edges, points);
-        PrimEdges = prim.MinimumSpanningTree(FractionOfCorridorsAdded);
+        PrimEdges = prim.MinimumSpanningTree(percentOfSpareEdgesAdded, shorestSpareEdges);
         
 
     }
@@ -304,6 +308,11 @@ public class DungeonGenerator : MonoBehaviour
     #endregion
     private void DrawDungeon()
     {
+        wallTM.ClearAllTiles();
+        floorTM.ClearAllTiles();
+        decosTM.ClearAllTiles();
+
+
         for (int x = 0; x < dungeonSize.x; x++)
         {
             for (int y = 0; y < dungeonSize.y; y++)
@@ -311,27 +320,34 @@ public class DungeonGenerator : MonoBehaviour
                 //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
                 if (gridMap[x,y].type == 0)
                 {
+
+                    wallTM.SetTile(new Vector3Int(x, y, 0), walls);
                     //spawnedTile = Instantiate(empty);
                     //spawnedTile.transform.parent = TileContainer;
                     //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 else if (gridMap[x, y].type == 1)
                 {
-                    spawnedTile = Instantiate(room);
-                    spawnedTile.transform.parent = TileContainer;
-                    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
+                    floorTM.SetTile(new Vector3Int(x, y, 0), floor);
+                    decosTM.SetTile(new Vector3Int(x, y, 0), decos);
+                    //spawnedTile = Instantiate(room);
+                    //spawnedTile.transform.parent = TileContainer;
+                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 else if (gridMap[x, y].type == 2)
                 {
+                    wallTM.SetTile(new Vector3Int(x, y, 0), walls);
                     //spawnedTile = Instantiate(border);
                     //spawnedTile.transform.parent = TileContainer;
                     //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 else if(gridMap[x, y].type == 3)
                 {
-                    spawnedTile = Instantiate(corridor);
-                    spawnedTile.transform.parent = TileContainer;
-                    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
+                    floorTM.SetTile(new Vector3Int(x, y, 0), floor);
+                    decosTM.SetTile(new Vector3Int(x, y, 0), decos);
+                    //spawnedTile = Instantiate(corridor);
+                    //spawnedTile.transform.parent = TileContainer;
+                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 //if(spawnedTile != null)
                 //{
@@ -339,6 +355,15 @@ public class DungeonGenerator : MonoBehaviour
                 //    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 //}
 
+            }
+        }
+
+        //added some empty pixels above, so we can't see walls at the very top
+        for (int x = 0; x < dungeonSize.x; x++)
+        {
+            for (int y = dungeonSize.y; y < dungeonSize.y+10; y++)
+            {
+                wallTM.SetTile(new Vector3Int(x, y, 0), walls);
             }
         }
     }
