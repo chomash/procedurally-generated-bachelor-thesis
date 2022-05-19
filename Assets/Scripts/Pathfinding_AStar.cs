@@ -112,24 +112,33 @@ public class Pathfinding_AStar : MonoBehaviour
             //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
             if (dungGenerator.gridMap[beginNode.location.x, beginNode.location.y].type != 1)
             {
-                //adding additional tiles below and to the left to make corridors at least 2 wide
                 dungGenerator.gridMap[beginNode.location.x, beginNode.location.y] = new GridLocation(beginNode.location.x, beginNode.location.y, 3, null);
             }
-            if (dungGenerator.gridMap[beginNode.location.x-1, beginNode.location.y].type != 1)
-            {
-                dungGenerator.gridMap[beginNode.location.x - 1, beginNode.location.y] = new GridLocation(beginNode.location.x - 1, beginNode.location.y, 3, null);
-            }
-            if(dungGenerator.gridMap[beginNode.location.x, beginNode.location.y-1].type != 1)
-            {
-                dungGenerator.gridMap[beginNode.location.x, beginNode.location.y - 1] = new GridLocation(beginNode.location.x, beginNode.location.y - 1, 3, null);
-            }
-            if(dungGenerator.gridMap[beginNode.location.x-1, beginNode.location.y - 1].type != 1)
-            { 
-                dungGenerator.gridMap[beginNode.location.x-1, beginNode.location.y-1] = new GridLocation(beginNode.location.x-1, beginNode.location.y-1, 3, null);
-            }
-
-
+            Wider(beginNode);
             beginNode = beginNode.parent;
+        }
+    }
+
+    void Wider(PathNode pNode)
+    {
+        int x = pNode.location.x;
+        int y = pNode.location.y;
+
+        List<GridLocation> directions = new List<GridLocation>() { new GridLocation(-1, 0), new GridLocation(0, -1), new GridLocation(-1, -1) };
+
+        foreach (var dir in directions)
+        {
+            GridLocation wider = dir + new GridLocation(x, y);
+            int newX = 0;
+            int newY = 0;
+            if (wider.x < 0) { newX = 1; }
+            if (wider.y < 0) { newY = 1; }
+            if (dungGenerator.gridMap[wider.x + newX, wider.y + newY].type != 1)
+            {
+                dungGenerator.gridMap[wider.x + newX, wider.y + newY] = new GridLocation(wider.x + newX, wider.y + newY, 3, null);
+            }
+
+
         }
     }
     bool isClosed(GridLocation marker)
@@ -168,7 +177,8 @@ public class Pathfinding_AStar : MonoBehaviour
         }
         else if(dungGenerator.gridMap[point.x, point.y].type == 1)
         {
-            if(dungGenerator.gridMap[point.x, point.y].parentRoom.info.Contains(new Vector2Int(endL.x, endL.y)))
+            if(dungGenerator.gridMap[point.x, point.y].parentRoom.info.Contains(new Vector2Int(endL.x, endL.y)) ||
+                dungGenerator.gridMap[point.x, point.y].parentRoom.info.Contains(new Vector2Int(startL.x, startL.y)))
             {
                 newG = rightRoom;
             }

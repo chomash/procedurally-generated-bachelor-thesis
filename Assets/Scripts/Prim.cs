@@ -71,8 +71,18 @@ public class Prim
             int no_Add = Mathf.RoundToInt(additionalEdges * unusedEdges.Count());
             for (int i = 0; i < no_Add; i++)
             {
-                newEdges.Add(unusedEdges[0]);
-                unusedEdges.Remove(unusedEdges[0]);
+                if (shortestEdges)
+                {
+                    newEdges.Add(unusedEdges[0]);
+                    unusedEdges.Remove(unusedEdges[0]);
+                }
+                else
+                {
+                    int rng = Random.Range(0, unusedEdges.Count());
+                    newEdges.Add(unusedEdges[rng]);
+                    unusedEdges.Remove(unusedEdges[rng]);
+                }
+
             }
         }
         return newEdges;

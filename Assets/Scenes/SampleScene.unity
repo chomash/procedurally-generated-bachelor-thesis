@@ -840,28 +840,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AStar: {fileID: 1603026988}
+  dungeonSize: {x: 160, y: 90}
+  minRoomSize: {x: 9, y: 9}
+  maxRoomSize: {x: 15, y: 15}
+  roomCount: 35
+  gapSize: 10
+  attempts: 15
+  shorestSpareEdges: 0
+  percentOfSpareEdgesAdded: 0.2
+  randomizeSeed: 0
+  seed: 1608924102
   floorTM: {fileID: 1912776905}
   wallTM: {fileID: 745657104}
   decosTM: {fileID: 45917365}
   floor: {fileID: 11400000, guid: 8ad6960288cf4574d9658c6b99f84c1d, type: 2}
   walls: {fileID: 11400000, guid: cf48615144738b64296fdefa8e7cd3d1, type: 2}
   decos: {fileID: 11400000, guid: aa7921f0d84c7a64d9fc9882e79fc17d, type: 2}
-  dungeonSize: {x: 160, y: 90}
-  minRoomSize: {x: 9, y: 9}
-  maxRoomSize: {x: 15, y: 15}
-  roomCount: 20
-  gapSize: 10
-  attempts: 15
-  shorestSpareEdges: 0
-  percentOfSpareEdgesAdded: 0
-  randomizeSeed: 1
-  seed: 1577343724
-  empty: {fileID: 4168312628687864312, guid: 2464785e6bc3c274ca56b8f60cfaf2b3, type: 3}
-  room: {fileID: 4168312628687864312, guid: 982f231d531719046afcdca41bc840fd, type: 3}
-  border: {fileID: 4168312628687864312, guid: 9a4366246c7c48b4088b9ad001c8aa3a, type: 3}
-  corridor: {fileID: 4168312628687864312, guid: 82a034a09bdcc234bb7bcd0802f52bf9, type: 3}
-  showTriangleEdges: 0
-  showPrimEdges: 0
+  showVertexes: 1
+  showTriangleEdges: 1
+  showPrimEdges: 1
   triangleEdgeColor: {r: 0.36320752, g: 0.6508769, b: 1, a: 0.49019608}
   primColor: {r: 1, g: 0.32661325, b: 0, a: 1}
   meshMaterial: {fileID: 2100000, guid: 24e8abe2d8226cf439ec52aa21316043, type: 2}
@@ -897,8 +894,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungGenerator: {fileID: 1603026986}
-  empty: 1
-  rightRoom: -1
+  empty: 1.4
+  rightRoom: 0
   wrongRoom: 2
   corridor: 0
   border: 3

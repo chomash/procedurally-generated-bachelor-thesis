@@ -66,8 +66,7 @@ public class DungeonGenerator : MonoBehaviour
 {
     #region data
     [SerializeField] public Pathfinding_AStar AStar;
-    [SerializeField] public Tilemap floorTM, wallTM, decosTM;
-    [SerializeField] public RuleTile floor, walls, decos;
+
     [Header("Generation properties")]
     public Vector2Int dungeonSize;
     public Vector2Int minRoomSize, maxRoomSize;
@@ -78,10 +77,12 @@ public class DungeonGenerator : MonoBehaviour
     public int seed;
 
     [Header("Tile Properties")]
-    public GameObject empty;
-    public GameObject room, border, corridor;
+    [SerializeField] public Tilemap floorTM;
+    [SerializeField] public Tilemap wallTM, decosTM;
+    [SerializeField] public RuleTile floor, walls, decos;
 
     [Header("Triangulation Properties")]
+    public bool showVertexes = true;
     public bool showTriangleEdges = true;
     public bool showPrimEdges = true;
     public Color triangleEdgeColor = new Color(50, 100, 200, 120);
@@ -97,7 +98,6 @@ public class DungeonGenerator : MonoBehaviour
     private IEnumerable<IEdge> edges;
     private List<Edge> PrimEdges = new List<Edge>();
     private Transform PointsContainer;
-    private Transform TileContainer;
     private Transform PrimContainer;
     private Transform TrianglesContainer;
     private List<room> rooms;
@@ -108,7 +108,6 @@ public class DungeonGenerator : MonoBehaviour
                                                                       new GridLocation(0,1),
                                                                       new GridLocation (0,-1)};
     
-    private GameObject spawnedTile;
     #endregion
 
     void Start()
@@ -130,6 +129,10 @@ public class DungeonGenerator : MonoBehaviour
         CreateNewContainers();
         DrawDungeon();
 
+        if (showVertexes)
+        {
+            DrawVertexes();
+        }
         if (showTriangleEdges)
         {
             DrawTriangles();
@@ -322,43 +325,26 @@ public class DungeonGenerator : MonoBehaviour
                 {
 
                     wallTM.SetTile(new Vector3Int(x, y, 0), walls);
-                    //spawnedTile = Instantiate(empty);
-                    //spawnedTile.transform.parent = TileContainer;
-                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 else if (gridMap[x, y].type == 1)
                 {
                     floorTM.SetTile(new Vector3Int(x, y, 0), floor);
                     decosTM.SetTile(new Vector3Int(x, y, 0), decos);
-                    //spawnedTile = Instantiate(room);
-                    //spawnedTile.transform.parent = TileContainer;
-                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 else if (gridMap[x, y].type == 2)
                 {
                     wallTM.SetTile(new Vector3Int(x, y, 0), walls);
-                    //spawnedTile = Instantiate(border);
-                    //spawnedTile.transform.parent = TileContainer;
-                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
                 }
                 else if(gridMap[x, y].type == 3)
                 {
                     floorTM.SetTile(new Vector3Int(x, y, 0), floor);
                     decosTM.SetTile(new Vector3Int(x, y, 0), decos);
-                    //spawnedTile = Instantiate(corridor);
-                    //spawnedTile.transform.parent = TileContainer;
-                    //spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
+                    
                 }
-                //if(spawnedTile != null)
-                //{
-                //    spawnedTile.transform.parent = TileContainer;
-                //    spawnedTile.transform.position = new Vector3((float)x, (float)y, 0);
-                //}
-
             }
         }
 
-        //added some empty pixels above, so we can't see walls at the very top
+        //added some empty tiles above, so we can't see walls at the very top
         for (int x = 0; x < dungeonSize.x; x++)
         {
             for (int y = dungeonSize.y; y < dungeonSize.y+10; y++)
@@ -366,6 +352,23 @@ public class DungeonGenerator : MonoBehaviour
                 wallTM.SetTile(new Vector3Int(x, y, 0), walls);
             }
         }
+    }
+    private void DrawVertexes()
+    {
+        if (delaunator == null) return;
+        delaunator.ForEachTriangleEdge(edge =>
+        {
+            var pointgameobject = Instantiate(trianglePointPrefab, PointsContainer);
+            pointgameobject.transform.SetPositionAndRotation(edge.P.ToVector3(), Quaternion.identity);
+        });
+    }
+    private void DrawTriangles()
+    {
+        if (delaunator == null) return;
+        delaunator.ForEachTriangleEdge(edge =>
+        {
+            CreateLine(TrianglesContainer, $"TriangleEdge - {edge.Index}", new Vector3[] { edge.P.ToVector3(), edge.Q.ToVector3() }, triangleEdgeColor, triangleEdgeWidth, 10);
+        });
     }
     private void DrawPrims()
     {
@@ -375,19 +378,7 @@ public class DungeonGenerator : MonoBehaviour
             CreateLine(PrimContainer, $"TriangleEdge - {edge.Index}", new Vector3[] { edge.P.ToVector3(), edge.Q.ToVector3() }, primColor, primEdgeWidth, 11);
         });
     }
-    private void DrawTriangles()
-    {
-        if (delaunator == null) return;
-        delaunator.ForEachTriangleEdge(edge =>
-        {
-            CreateLine(TrianglesContainer, $"TriangleEdge - {edge.Index}", new Vector3[] { edge.P.ToVector3(), edge.Q.ToVector3() }, triangleEdgeColor, triangleEdgeWidth, 10);
-            
-            //draw poins
-            //var pointGameObject = Instantiate(trianglePointPrefab, PointsContainer);
-            //pointGameObject.transform.SetPositionAndRotation(edge.P.ToVector3(), Quaternion.identity);
 
-        });
-    }
     private void CreateLine(Transform container, string name, Vector3[] points, Color color, float width, int order)
     {
         var lineGameObject = new GameObject(name);
@@ -410,7 +401,6 @@ public class DungeonGenerator : MonoBehaviour
         CreateNewPointsContainer();
         CreateNewTrianglesContainer();
         CreateNewPrimContainer();
-        CreateNewTileContainer();
     }
     private void CreateNewPointsContainer()
     {
@@ -438,15 +428,6 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         PrimContainer = new GameObject(nameof(PrimContainer)).transform;
-    }
-    private void CreateNewTileContainer()
-    {
-        if (TileContainer != null)
-        {
-            Destroy(TileContainer.gameObject);
-        }
-
-        TileContainer = new GameObject(nameof(TileContainer)).transform;
     }
     #endregion
 }
