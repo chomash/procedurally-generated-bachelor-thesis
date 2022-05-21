@@ -114,7 +114,7 @@ public class Pathfinding_AStar : MonoBehaviour
             {
                 dungGenerator.gridMap[beginNode.location.x, beginNode.location.y] = new GridLocation(beginNode.location.x, beginNode.location.y, 3, null);
             }
-            Wider(beginNode);
+            //Wider(beginNode);
             beginNode = beginNode.parent;
         }
     }

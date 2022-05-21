@@ -413,7 +413,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.05882353, g: 0.039215688, b: 0.02745098, a: 0}
+  m_BackGroundColor: {r: 0.122641504, g: 0.11003466, b: 0.10239408, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -732,7 +732,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230913418}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.5, y: -0.5, z: 0}
   m_LocalScale: {x: 3.125, y: 3.125, z: 3.125}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -841,24 +841,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AStar: {fileID: 1603026988}
   dungeonSize: {x: 160, y: 90}
-  minRoomSize: {x: 9, y: 9}
-  maxRoomSize: {x: 15, y: 15}
-  roomCount: 35
-  gapSize: 10
-  attempts: 15
+  minRoomSize: {x: 8, y: 8}
+  maxRoomSize: {x: 16, y: 16}
+  roomCount: 32
+  gapSize: 4
+  attempts: 16
   shorestSpareEdges: 0
-  percentOfSpareEdgesAdded: 0.2
+  percentOfSpareEdgesAdded: 0.1
   randomizeSeed: 0
-  seed: 1608924102
+  seed: 2137
   floorTM: {fileID: 1912776905}
   wallTM: {fileID: 745657104}
   decosTM: {fileID: 45917365}
   floor: {fileID: 11400000, guid: 8ad6960288cf4574d9658c6b99f84c1d, type: 2}
   walls: {fileID: 11400000, guid: cf48615144738b64296fdefa8e7cd3d1, type: 2}
   decos: {fileID: 11400000, guid: aa7921f0d84c7a64d9fc9882e79fc17d, type: 2}
-  showVertexes: 1
-  showTriangleEdges: 1
-  showPrimEdges: 1
+  corridor: {fileID: 11400000, guid: 8ad6960288cf4574d9658c6b99f84c1d, type: 2}
+  border: {fileID: 11400000, guid: cf48615144738b64296fdefa8e7cd3d1, type: 2}
+  showVertexes: 0
+  showTriangleEdges: 0
+  showPrimEdges: 0
   triangleEdgeColor: {r: 0.36320752, g: 0.6508769, b: 1, a: 0.49019608}
   primColor: {r: 1, g: 0.32661325, b: 0, a: 1}
   meshMaterial: {fileID: 2100000, guid: 24e8abe2d8226cf439ec52aa21316043, type: 2}
@@ -894,12 +896,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungGenerator: {fileID: 1603026986}
-  empty: 1.4
-  rightRoom: 0
-  wrongRoom: 2
+  empty: 1
+  rightRoom: -0.1
+  wrongRoom: 1.5
   corridor: 0
-  border: 3
-  distanceMulti: 1
+  border: 1.5
+  distanceMulti: 1.1
 --- !u!1 &1912776902
 GameObject:
   m_ObjectHideFlags: 0

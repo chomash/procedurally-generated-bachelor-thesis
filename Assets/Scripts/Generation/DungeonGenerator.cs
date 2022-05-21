@@ -79,7 +79,7 @@ public class DungeonGenerator : MonoBehaviour
     [Header("Tile Properties")]
     [SerializeField] public Tilemap floorTM;
     [SerializeField] public Tilemap wallTM, decosTM;
-    [SerializeField] public RuleTile floor, walls, decos;
+    [SerializeField] public RuleTile floor, walls, decos, corridor, border;
 
     [Header("Triangulation Properties")]
     public bool showVertexes = true;
@@ -150,7 +150,6 @@ public class DungeonGenerator : MonoBehaviour
         int j = 0; //room placement attempt counter
         for (int i = 0; i < roomCount; i++)
         {
-            //randomize coords, size
             Vector2Int newCoords = new Vector2Int(Random.Range(0, dungeonSize.x), Random.Range(0, dungeonSize.y));
             Vector2Int newSize = new Vector2Int(Random.Range(minRoomSize.x, maxRoomSize.x), Random.Range(minRoomSize.y, maxRoomSize.y));
             newRoom = new room(newCoords, newSize-Vector2Int.one);
@@ -171,8 +170,7 @@ public class DungeonGenerator : MonoBehaviour
             else
             {
                 if (j >= attempts) { break;}
-                i--;
-                j++;
+                i--; j++;
                 
             }           
         }
@@ -321,9 +319,8 @@ public class DungeonGenerator : MonoBehaviour
             for (int y = 0; y < dungeonSize.y; y++)
             {
                 //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
-                if (gridMap[x,y].type == 0)
+                if (gridMap[x, y].type == 0)
                 {
-
                     wallTM.SetTile(new Vector3Int(x, y, 0), walls);
                 }
                 else if (gridMap[x, y].type == 1)
@@ -333,13 +330,13 @@ public class DungeonGenerator : MonoBehaviour
                 }
                 else if (gridMap[x, y].type == 2)
                 {
-                    wallTM.SetTile(new Vector3Int(x, y, 0), walls);
+                    wallTM.SetTile(new Vector3Int(x, y, 0), border);
                 }
-                else if(gridMap[x, y].type == 3)
+                else if (gridMap[x, y].type == 3)
                 {
-                    floorTM.SetTile(new Vector3Int(x, y, 0), floor);
+                    floorTM.SetTile(new Vector3Int(x, y, 0), corridor);
                     decosTM.SetTile(new Vector3Int(x, y, 0), decos);
-                    
+
                 }
             }
         }
