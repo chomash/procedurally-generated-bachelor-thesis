@@ -51,6 +51,8 @@ public class Pathfinding_AStar : MonoBehaviour
     GridLocation startL, endL;
     bool done = false;
 
+
+
     public void SearchForConnection(GridLocation _startL, GridLocation _endL)
     {
         startL = _startL;
@@ -64,9 +66,6 @@ public class Pathfinding_AStar : MonoBehaviour
     public void BeginSearch()
     {
         done = false;
-
-        //Vector3 startLocation = new Vector3(startL.x, startL.y, 0);
-        //Vector3 endLocation = new Vector3(endL.x, endL.y, 0);
         startNode = new PathNode(new GridLocation(startL.x, startL.y),0, 0, 0, null);
         goalNode = new PathNode(new GridLocation(endL.x, endL.y), 0, 0, 0, null);
 
@@ -114,7 +113,7 @@ public class Pathfinding_AStar : MonoBehaviour
             {
                 dungGenerator.gridMap[beginNode.location.x, beginNode.location.y] = new GridLocation(beginNode.location.x, beginNode.location.y, 3, null);
             }
-            //Wider(beginNode);
+            Wider(beginNode);
             beginNode = beginNode.parent;
         }
     }
@@ -124,18 +123,18 @@ public class Pathfinding_AStar : MonoBehaviour
         int x = pNode.location.x;
         int y = pNode.location.y;
 
-        List<GridLocation> directions = new List<GridLocation>() { new GridLocation(-1, 0), new GridLocation(0, -1), new GridLocation(-1, -1) };
+        List<GridLocation> directions = new List<GridLocation>() { new GridLocation(1, 0), new GridLocation(0, 1), new GridLocation(1, 1) };
 
         foreach (var dir in directions)
         {
-            GridLocation wider = dir + new GridLocation(x, y);
+            GridLocation thisNode = dir + new GridLocation(x, y);
             int newX = 0;
             int newY = 0;
-            if (wider.x < 0) { newX = 1; }
-            if (wider.y < 0) { newY = 1; }
-            if (dungGenerator.gridMap[wider.x + newX, wider.y + newY].type != 1)
+            if (thisNode.x < 0) { newX = 1; }
+            if (thisNode.y < 0) { newY = 1; }
+            if (dungGenerator.gridMap[thisNode.x + newX, thisNode.y + newY].type != 1)
             {
-                dungGenerator.gridMap[wider.x + newX, wider.y + newY] = new GridLocation(wider.x + newX, wider.y + newY, 3, null);
+                dungGenerator.corridorLocations.Add(new GridLocation(thisNode.x + newX, thisNode.y + newY, 3, null));
             }
 
 

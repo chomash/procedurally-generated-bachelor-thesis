@@ -12,11 +12,11 @@ TagManager:
   - 
   - Water
   - UI
-  - Tiles
-  - 
-  - 
-  - 
-  - Debugging
+  - Actor
+  - Floor
+  - Walls
+  - Decos
+  - Collectable
   - 
   - 
   - 
