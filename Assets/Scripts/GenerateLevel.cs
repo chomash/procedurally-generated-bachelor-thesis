@@ -14,7 +14,6 @@ public class GenerateLevel : MonoBehaviour
 
     private int playerRoomIndex;
     private bool[] usedRoom;
-    private int no_coin=0;
 
 
     void Start()
@@ -24,11 +23,11 @@ public class GenerateLevel : MonoBehaviour
             seed = (int)System.DateTime.Now.Ticks;
         }
         Random.InitState(seed);
+        
         dungGenerator.Initialize();
         
         SpawnPlayer();
         GenerateCoins();
-        
     }
 
     void SpawnPlayer()
@@ -57,7 +56,7 @@ public class GenerateLevel : MonoBehaviour
         {
             Vector3 coords = new Vector3(Random.Range(spawnBoundries.min.x, spawnBoundries.max.x), Random.Range(spawnBoundries.min.y, spawnBoundries.max.y), 0);
             Instantiate(spawnedObject, coords, Quaternion.identity);
-            no_coin++;
+            GameManager.instance.fullProgress++;
         }
     }
 }

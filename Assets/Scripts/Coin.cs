@@ -12,6 +12,7 @@ public class Coin : Collectable
         {
             collected = true;
             GameManager.instance.dollars += amout;
+            GameManager.instance.actualProgress++;
             Destroy(gameObject);
         }
     }
