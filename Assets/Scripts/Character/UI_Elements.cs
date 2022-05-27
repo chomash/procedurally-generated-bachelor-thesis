@@ -14,7 +14,7 @@ public class UI_Elements : MonoBehaviour
     public void reloadScene()
     {
         Debug.Log(SceneManager.GetActiveScene().name);
-        //SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void nextLevel()
