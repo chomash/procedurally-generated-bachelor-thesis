@@ -109,10 +109,10 @@ public class Pathfinding_AStar : MonoBehaviour
         while (!startNode.Equals(beginNode) && beginNode != null)
         {
             //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
-            if (dungGenerator.gridMap[beginNode.location.x, beginNode.location.y].type != 1)
-            {
+            // if (dungGenerator.gridMap[beginNode.location.x, beginNode.location.y].type != 1)
+            // {
                 dungGenerator.gridMap[beginNode.location.x, beginNode.location.y] = new GridLocation(beginNode.location.x, beginNode.location.y, 3, null);
-            }
+            // } //skipping this, make that paths through room are more likely to be used
             Wider(beginNode);
             beginNode = beginNode.parent;
         }

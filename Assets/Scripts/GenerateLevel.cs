@@ -39,14 +39,18 @@ public class GenerateLevel : MonoBehaviour
     }
     void GenerateCoins()
     {
-        usedRoom = new bool[dungGenerator.roomCount];
+        usedRoom = new bool[dungGenerator.rooms.Count];
         usedRoom[playerRoomIndex] = true;
 
-        for (int i = 0; i < dungGenerator.roomCount; i++)
+        for (int i = 0; i < dungGenerator.rooms.Count; i++)
         {
             if (usedRoom[i] == true) continue;
-            SpawnObjectsInRoom(dungGenerator.rooms[i].info, coinObject, coinsInRoom);
-            usedRoom[i] = true;
+            if(dungGenerator.rooms[i] != null)
+            {
+                SpawnObjectsInRoom(dungGenerator.rooms[i].info, coinObject, coinsInRoom);
+                usedRoom[i] = true;
+            }
+
         }
     }
     void SpawnObjectsInRoom(RectInt spawnBoundries, GameObject spawnedObject, Vector2Int numberOfSpawns)

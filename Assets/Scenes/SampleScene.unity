@@ -999,7 +999,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1259042823
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1219,14 +1219,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AStar: {fileID: 1603026988}
-  dungeonSize: {x: 80, y: 45}
-  minRoomSize: {x: 6, y: 6}
-  maxRoomSize: {x: 12, y: 12}
-  roomCount: 10
-  gapSize: 2
+  dungeonSize: {x: 160, y: 90}
+  minRoomSize: {x: 9, y: 9}
+  maxRoomSize: {x: 15, y: 15}
+  roomCount: 40
+  gapSize: 8
   attempts: 15
   shorestSpareEdges: 0
-  percentOfSpareEdgesAdded: 0.15
+  percentOfSpareEdgesAdded: 0.12
   floorTM: {fileID: 1912776905}
   wallTM: {fileID: 745657104}
   decosTM: {fileID: 45917365}
@@ -1276,9 +1276,9 @@ MonoBehaviour:
   empty: 1.2
   rightRoom: -0.1
   wrongRoom: 1.5
-  corridor: -0.5
+  corridor: 0.4
   border: 1.5
-  distanceMulti: 1.1
+  distanceMulti: 1
 --- !u!114 &1603026989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1292,11 +1292,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungGenerator: {fileID: 1603026986}
-  randomizeSeed: 0
-  seed: 1560940850
+  randomizeSeed: 1
+  seed: -410634136
   player: {fileID: 342766817956630309, guid: 543a7534ea7f2b340a114dd2dd6dde2b, type: 3}
   coinObject: {fileID: 2399321644445000441, guid: dfe3b63282e12ae4ea7d1c631fd669ea, type: 3}
-  coinsInRoom: {x: 2, y: 4}
+  coinsInRoom: {x: 3, y: 7}
 --- !u!1 &1689712194
 GameObject:
   m_ObjectHideFlags: 0

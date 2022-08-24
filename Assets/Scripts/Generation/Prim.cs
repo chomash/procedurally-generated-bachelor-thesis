@@ -32,7 +32,7 @@ public class Prim
     public List<Edge> MinimumSpanningTree(float additionalEdges, bool shortestEdges)
     {
         this.shortestEdges = shortestEdges;
-        allVertexes[Random.Range(0, allVertexes.Count)].key = 0f;//randomize starting point
+        allVertexes[Random.Range(0, allVertexes.Count)].key = 0f;//randomize starting point/root
         avaliableVertexes = new List<PVertex>(allVertexes);
         while (avaliableVertexes.Count > 0)
         {
@@ -43,8 +43,8 @@ public class Prim
             if (tempVertex.parentIndex >= 0)
             {
 
-                Point x = new Point(tempVertex.position.x, tempVertex.position.y);
-                Point y = new Point(allVertexes[tempVertex.parentIndex].position.x, allVertexes[tempVertex.parentIndex].position.y);
+                Point x = new Point(tempVertex.position.x, tempVertex.position.y); //self
+                Point y = new Point(allVertexes[tempVertex.parentIndex].position.x, allVertexes[tempVertex.parentIndex].position.y); //parent
                 int i = newEdges.Count;
                 Edge tempEdge = new Edge(i, x, y);
                 newEdges.Add(tempEdge);

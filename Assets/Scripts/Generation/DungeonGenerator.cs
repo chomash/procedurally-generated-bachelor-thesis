@@ -150,7 +150,7 @@ public class DungeonGenerator : MonoBehaviour
             Vector2Int newSize = new Vector2Int(Random.Range(minRoomSize.x, maxRoomSize.x), Random.Range(minRoomSize.y, maxRoomSize.y));
             newRoom = new room(newCoords, newSize-Vector2Int.one);
 
-            if(RoomInGrid(newRoom) && RoomNotOverlapping(newRoom))
+            if(RoomInGrid(newRoom) && RoomNotOverlapping(newRoom)) 
             {
                 for (int x = newRoom.info.x; x <= newRoom.info.xMax; x++)
                 {
@@ -263,12 +263,12 @@ public class DungeonGenerator : MonoBehaviour
             return false;
         }
     }
-    private bool RoomNotOverlapping(room newRoom)
+    private bool RoomNotOverlapping(room newRoom) //also creates border around the room
     {
         bool isOverlap = true;
         //additional +1 because of how overlap function works.
         room newRoomWithBorders = new room(newRoom.info.min + new Vector2Int(-(gapSize+1), -(gapSize + 1)), newRoom.info.size + new Vector2Int(2 * (gapSize + 1), 2 * (gapSize + 1)));
-
+    
         if (rooms.Count > 0)
         {
             foreach (var room in rooms)
@@ -297,10 +297,10 @@ public class DungeonGenerator : MonoBehaviour
         }
         else
         {
-            //shrinking by 1, to negate previous changes
-            for (int x = newRoomWithBorders.info.x+1; x <= newRoomWithBorders.info.xMax-1; x++)
+            room RoomBorders = new room(newRoom.info.min + new Vector2Int(-2, -2), newRoom.info.size + new Vector2Int(4,4));
+            for (int x = RoomBorders.info.x; x <=RoomBorders.info.xMax; x++)
             {
-                for (int y = newRoomWithBorders.info.y+1; y <= newRoomWithBorders.info.yMax-1; y++)
+                for (int y = RoomBorders.info.y; y <= RoomBorders.info.yMax; y++)
                 {
                     if(x < 0 || x > dungeonSize.x -1 || y < 0 || y > dungeonSize.y - 1) { continue; }
                     //0 - empty/wall, 1 - room, 2 - border, 3 - corridor
